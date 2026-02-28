@@ -32,3 +32,6 @@ apps/backend/prisma/migrations/**/migration_lock.toml
 *.tsbuildinfo
 coverage
 .cache
+
+# Vercel
+.vercel
