@@ -7,3 +7,6 @@ healthcheckPath = "/"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
+
+[build.env]
+NIXPACKS_PKGS = "nodejs_22, pnpm-9_x"
