@@ -10,3 +10,4 @@ restartPolicyMaxRetries = 10
 
 [build.env]
 NIXPACKS_PKGS = "nodejs_22, pnpm-9_x"
+NIXPACKS_BUILD_CMD = "pnpm install && pnpm build"
