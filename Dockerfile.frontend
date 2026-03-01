@@ -6,9 +6,10 @@ RUN npm install -g pnpm@9.14.2
 
 WORKDIR /app
 
-# Copy lock files first (for caching)
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+# Copy lock files and config first (for caching)
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json ./
 COPY packages/shared-schema/package.json ./packages/shared-schema/
+COPY packages/shared-schema/tsconfig.json ./packages/shared-schema/
 COPY apps/frontend/package.json ./apps/frontend/
 
 # Install dependencies
