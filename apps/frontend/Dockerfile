@@ -6,17 +6,16 @@ RUN npm install -g pnpm@9.14.2
 
 WORKDIR /app
 
-# Copy root files
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
-COPY packages/shared-schema/package.json ./packages/shared-schema/
-COPY apps/frontend/package.json ./apps/frontend/
+# Copy root files (from parent context)
+COPY ../pnpm-lock.yaml ../pnpm-workspace.yaml ../package.json ../turbo.json ./
+COPY ../packages/shared-schema/package.json ../packages/shared-schema/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
 # Copy source files
-COPY packages/shared-schema ./packages/shared-schema
-COPY apps/frontend ./apps/frontend
+COPY ../packages/shared-schema ../packages/shared-schema
+COPY . ./
 
 # Build shared-schema first
 RUN pnpm --filter shared-schema build
@@ -32,19 +31,14 @@ RUN npm install -g pnpm@9.14.2
 WORKDIR /app
 
 # Copy built frontend
-COPY --from=builder /app/apps/frontend/.next ./apps/frontend/.next
-COPY --from=builder /app/apps/frontend/public ./apps/frontend/public
-COPY --from=builder /app/apps/frontend/package.json ./apps/frontend/
-COPY --from=builder /app/apps/frontend/node_modules ./apps/frontend/node_modules
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-lock.yaml ./
-COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/node_modules ./node_modules
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-
-WORKDIR /app/apps/frontend
+ENV PORT=3000
 
 EXPOSE 3000
 
