@@ -2,7 +2,7 @@
 builder = "railpack"
 
 [deploy]
-startCommand = "node apps/frontend/server.js"
+startCommand = "pnpm run start:frontend"
 healthcheckPath = "/"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"

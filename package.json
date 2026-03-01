@@ -11,7 +11,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "db:generate": "pnpm --filter backend exec prisma generate",
     "db:migrate": "pnpm --filter backend exec prisma migrate dev",
-    "db:studio": "pnpm --filter backend exec prisma studio"
+    "db:studio": "pnpm --filter backend exec prisma studio",
+    "start:frontend": "node apps/frontend/server.js",
+    "start:backend": "node apps/backend/dist/main"
   },
   "devDependencies": {
     "pnpm": "^10.30.3",
