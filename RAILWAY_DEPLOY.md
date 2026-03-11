@@ -19,7 +19,7 @@ Recommended Railway setup:
 
 ### Build Command
 ```bash
-pnpm install && pnpm --filter shared-schema build && pnpm --filter backend build && pnpm --filter backend exec prisma generate
+pnpm install && pnpm --filter shared-schema build && pnpm --filter backend exec prisma generate && pnpm --filter backend build
 ```
 
 ### Start Command
