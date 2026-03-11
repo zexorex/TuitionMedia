@@ -4,14 +4,21 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import type { JwtPayload } from "./auth.service";
 import { AuthService } from "./auth.service";
 
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET environment variable is required");
+  }
+  return secret;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly authService: AuthService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey:
-        process.env.JWT_SECRET ?? "tuition-media-dev-secret-change-in-prod",
+      secretOrKey: getJwtSecret(),
     });
   }
 

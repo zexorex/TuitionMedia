@@ -8,7 +8,11 @@
     "start": "node dist/main",
     "start:debug": "nest start --debug --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "seed:admin": "ts-node prisma/seed-admin.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed-admin.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
@@ -38,6 +42,7 @@
     "@types/node": "^22.10.2",
     "@types/passport-jwt": "^4.0.1",
     "prisma": "^6.1.0",
+    "ts-node": "^10.9.2",
     "typescript": "~5.6.3"
   }
 }

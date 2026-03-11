@@ -5,13 +5,18 @@
 
 import { z } from "zod";
 
+// Full role enum for internal use (includes ADMIN)
 export const UserRoleSchema = z.enum(["STUDENT", "TUTOR", "ADMIN"]);
 export type UserRole = z.infer<typeof UserRoleSchema>;
+
+// Public registration only allows STUDENT and TUTOR (no ADMIN signup)
+export const PublicUserRoleSchema = z.enum(["STUDENT", "TUTOR"]);
+export type PublicUserRole = z.infer<typeof PublicUserRoleSchema>;
 
 export const RegisterUserSchema = z.object({
   email: z.string().email("Invalid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  role: UserRoleSchema,
+  role: PublicUserRoleSchema,
   name: z.string().min(1).max(100).optional(),
   tutorProfile: z
     .object({
