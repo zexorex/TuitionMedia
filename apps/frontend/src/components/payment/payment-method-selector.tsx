@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BkashPayment } from "./bkash-payment";
 import { NagadPayment } from "./nagad-payment";
