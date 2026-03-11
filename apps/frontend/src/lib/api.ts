@@ -1,5 +1,10 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
+// Debug: Log the API base URL
+if (typeof window !== "undefined") {
+  console.log("API_BASE:", API_BASE);
+}
+
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("tuitionmedia_token");
@@ -15,11 +20,18 @@ export async function api<T>(
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  
+  const fullUrl = `${API_BASE}${path}`;
+  console.log("Making request to:", fullUrl);
+  
+  const res = await fetch(fullUrl, { ...options, headers });
   const data = await res.json().catch(() => ({}));
+  
   if (!res.ok) {
+    console.error("API Error:", res.status, data);
     throw new Error(data.message ?? data.error ?? `Request failed: ${res.status}`);
   }
+  
   return data as T;
 }
 
