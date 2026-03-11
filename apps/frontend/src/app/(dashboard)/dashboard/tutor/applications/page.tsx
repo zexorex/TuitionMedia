@@ -16,7 +16,7 @@ type Application = {
     title: string;
     subject: string;
     status: string;
-    student: { user: { email: string } };
+    student: { email: string; name: string | null };
   };
 };
 
@@ -101,7 +101,7 @@ export default function TutorApplicationsPage() {
                   <div>
                     <CardTitle className="text-lg">{app.request.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {app.request.subject} • {app.request.student.user.email}
+                      {app.request.subject} • {app.request.student.email}
                     </p>
                   </div>
                   <span
