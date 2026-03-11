@@ -129,7 +129,7 @@ export default function RequestDetailPage() {
       >
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
         <h2 className="text-xl font-semibold">Request not found</h2>
-        <p className="text-muted-foreground">This request may have been removed or doesn't exist.</p>
+        <p className="text-muted-foreground">This request may have been removed or doesn&apos;t exist.</p>
         <Button variant="outline" onClick={() => router.push("/dashboard/student")}>
           Back to My Requests
         </Button>

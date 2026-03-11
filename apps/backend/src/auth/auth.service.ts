@@ -6,9 +6,9 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { Prisma, type UserRole } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 import { PrismaService } from "../prisma/prisma.service";
-import type { UserRole } from "@prisma/client";
 
 export interface JwtPayload {
   sub: string;
@@ -56,27 +56,30 @@ export class AuthService {
       },
     });
 
-    if (role === "TUTOR" && profileData && "bio" in profileData) {
+    if (role === "TUTOR") {
+      const tutorProfile = profileData && "bio" in profileData ? profileData : undefined;
       await this.prisma.tutorProfile.create({
         data: {
           id: crypto.randomUUID(),
           user_id: user.id,
-          bio: profileData.bio,
-          subjects: profileData.subjects ?? [],
-          hourly_rate: profileData.hourlyRate ?? 0,
-          education: profileData.education,
+          bio: tutorProfile?.bio,
+          subjects: tutorProfile?.subjects ?? [],
+          hourly_rate: tutorProfile?.hourlyRate ?? 0,
+          education: tutorProfile?.education,
           qualifications: [],
           updated_at: new Date(),
         },
       });
     }
-    if (role === "STUDENT" && profileData && "gradeLevel" in profileData) {
+
+    if (role === "STUDENT") {
+      const studentProfile = profileData && "gradeLevel" in profileData ? profileData : undefined;
       await this.prisma.studentProfile.create({
         data: {
           id: crypto.randomUUID(),
           user_id: user.id,
-          grade: profileData.gradeLevel,
-          location: profileData.preferredLocation,
+          grade: studentProfile?.gradeLevel,
+          location: studentProfile?.preferredLocation,
           subjects: [],
           updated_at: new Date(),
         },
@@ -116,69 +119,100 @@ export class AuthService {
   }
 
   async updateProfile(userId: string, data: { name?: string; phone?: string }) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { ...(data.name !== undefined && { name: data.name }), ...(data.phone !== undefined && { phone: data.phone }), updated_at: new Date() },
-      select: { id: true, email: true, name: true, role: true, phone: true },
-    });
+    try {
+      return await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...(data.name !== undefined && { name: data.name }),
+          ...(data.phone !== undefined && { phone: data.phone }),
+          updated_at: new Date(),
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          phone: true,
+          is_verified: true,
+          created_at: true,
+        },
+      });
+    } catch (error) {
+      this.rethrowPrismaError(error);
+    }
   }
 
   async getTutorProfile(userId: string) {
-    const profile = await this.prisma.tutorProfile.findUnique({ where: { user_id: userId } });
-    if (!profile) throw new NotFoundException("Tutor profile not found");
-    return profile;
+    return this.prisma.tutorProfile.findUnique({ where: { user_id: userId } });
   }
 
   async upsertTutorProfile(userId: string, data: { bio?: string; subjects?: string[]; hourly_rate?: number; education?: string; location?: string; experience?: number }) {
     const existing = await this.prisma.tutorProfile.findUnique({ where: { user_id: userId } });
-    if (existing) {
-      return this.prisma.tutorProfile.update({
-        where: { user_id: userId },
-        data: { ...data, updated_at: new Date() },
+    try {
+      if (existing) {
+        return await this.prisma.tutorProfile.update({
+          where: { user_id: userId },
+          data: { ...data, updated_at: new Date() },
+        });
+      }
+      return await this.prisma.tutorProfile.create({
+        data: {
+          id: crypto.randomUUID(),
+          user_id: userId,
+          bio: data.bio,
+          subjects: data.subjects ?? [],
+          hourly_rate: data.hourly_rate ?? 0,
+          education: data.education,
+          location: data.location,
+          experience: data.experience ?? 0,
+          qualifications: [],
+          updated_at: new Date(),
+        },
       });
+    } catch (error) {
+      this.rethrowPrismaError(error);
     }
-    return this.prisma.tutorProfile.create({
-      data: {
-        id: crypto.randomUUID(),
-        user_id: userId,
-        bio: data.bio,
-        subjects: data.subjects ?? [],
-        hourly_rate: data.hourly_rate ?? 0,
-        education: data.education,
-        location: data.location,
-        experience: data.experience ?? 0,
-        qualifications: [],
-        updated_at: new Date(),
-      },
-    });
   }
 
   async getStudentProfile(userId: string) {
-    const profile = await this.prisma.studentProfile.findUnique({ where: { user_id: userId } });
-    if (!profile) throw new NotFoundException("Student profile not found");
-    return profile;
+    return this.prisma.studentProfile.findUnique({ where: { user_id: userId } });
   }
 
   async upsertStudentProfile(userId: string, data: { grade?: string; school?: string; subjects?: string[]; goals?: string; location?: string }) {
     const existing = await this.prisma.studentProfile.findUnique({ where: { user_id: userId } });
-    if (existing) {
-      return this.prisma.studentProfile.update({
-        where: { user_id: userId },
-        data: { ...data, updated_at: new Date() },
+    try {
+      if (existing) {
+        return await this.prisma.studentProfile.update({
+          where: { user_id: userId },
+          data: { ...data, updated_at: new Date() },
+        });
+      }
+      return await this.prisma.studentProfile.create({
+        data: {
+          id: crypto.randomUUID(),
+          user_id: userId,
+          grade: data.grade,
+          school: data.school,
+          subjects: data.subjects ?? [],
+          goals: data.goals,
+          location: data.location,
+          updated_at: new Date(),
+        },
       });
+    } catch (error) {
+      this.rethrowPrismaError(error);
     }
-    return this.prisma.studentProfile.create({
-      data: {
-        id: crypto.randomUUID(),
-        user_id: userId,
-        grade: data.grade,
-        school: data.school,
-        subjects: data.subjects ?? [],
-        goals: data.goals,
-        location: data.location,
-        updated_at: new Date(),
-      },
-    });
+  }
+
+  private rethrowPrismaError(error: unknown): never {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = Array.isArray(error.meta?.target) ? error.meta.target.join(", ") : String(error.meta?.target ?? "");
+      if (target.includes("phone")) {
+        throw new ConflictException("Phone number is already in use");
+      }
+      throw new ConflictException("A record with this value already exists");
+    }
+    throw error;
   }
 
   private signUser(user: { id: string; email: string; name?: string | null; role: UserRole }): AuthTokens {
