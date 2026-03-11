@@ -8,8 +8,95 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { apiPost } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+
+const SUBJECTS = [
+  "Mathematics",
+  "Additional Mathematics",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Science",
+  "English",
+  "Bahasa Melayu",
+  "Mandarin",
+  "Tamil",
+  "History",
+  "Geography",
+  "Economics",
+  "Accounting",
+  "Business Studies",
+  "Computer Science",
+  "Information Technology",
+  "Literature",
+  "Art",
+  "Music",
+  "Physical Education",
+  "Islamic Studies",
+  "Moral Studies",
+  "Pendidikan Islam",
+];
+
+const LOCATIONS = [
+  "Online Only",
+  "Kuala Lumpur",
+  "Petaling Jaya",
+  "Subang Jaya",
+  "Shah Alam",
+  "Bangsar",
+  "Damansara",
+  "Mont Kiara",
+  "Ampang",
+  "Cheras",
+  "Puchong",
+  "Klang",
+  "Cyberjaya",
+  "Putrajaya",
+  "Seremban",
+  "Johor Bahru",
+  "Penang",
+  "Ipoh",
+  "Malacca",
+  "Kota Kinabalu",
+  "Kuching",
+  "Other",
+];
+
+const CLASS_MODES = [
+  { value: "Online", label: "Online Classes" },
+  { value: "Offline", label: "In-Person Classes" },
+  { value: "Hybrid", label: "Both Online & In-Person" },
+  { value: "Flexible", label: "Flexible / Open to Any" },
+];
+
+const EDUCATION_LEVELS = [
+  "Primary (Year 1-6)",
+  "Secondary (Form 1-3)",
+  "SPM (Form 4-5)",
+  "IGCSE O-Levels",
+  "A-Levels",
+  "Foundation",
+  "Diploma",
+  "Degree",
+  "Other",
+];
+
+const BUDGET_RANGES = [
+  { value: "30", label: "RM 30-50/hour" },
+  { value: "50", label: "RM 50-70/hour" },
+  { value: "70", label: "RM 70-100/hour" },
+  { value: "100", label: "RM 100-150/hour" },
+  { value: "150", label: "RM 150+/hour" },
+  { value: "negotiable", label: "Negotiable" },
+];
 
 export default function NewRequestPage() {
   const router = useRouter();
@@ -18,6 +105,8 @@ export default function NewRequestPage() {
     title: "",
     description: "",
     subject: "",
+    level: "",
+    mode: "",
     budget: "",
     location: "",
   });
@@ -30,7 +119,9 @@ export default function NewRequestPage() {
         title: form.title,
         description: form.description,
         subject: form.subject,
-        budget: form.budget ? Number(form.budget) : undefined,
+        level: form.level || undefined,
+        mode: form.mode || undefined,
+        budget: form.budget && form.budget !== "negotiable" ? Number(form.budget) : undefined,
         location: form.location || undefined,
       });
       toast({ title: "Request posted!", variant: "success" });
@@ -73,22 +164,96 @@ export default function NewRequestPage() {
                 className="bg-white/5"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Input
-                id="subject"
-                placeholder="e.g. Mathematics, Physics"
-                value={form.subject}
-                onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
-                required
-                className="bg-white/5"
-              />
+            
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="subject">Subject *</Label>
+                <Select value={form.subject} onValueChange={(v: string) => setForm((f) => ({ ...f, subject: v }))}>
+                  <SelectTrigger className="bg-white/5">
+                    <SelectValue placeholder="Select a subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUBJECTS.map((subject) => (
+                      <SelectItem key={subject} value={subject}>
+                        {subject}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="level">Education Level</Label>
+                <Select value={form.level} onValueChange={(v: string) => setForm((f) => ({ ...f, level: v }))}>
+                  <SelectTrigger className="bg-white/5">
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EDUCATION_LEVELS.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="mode">Class Mode</Label>
+                <Select value={form.mode} onValueChange={(v: string) => setForm((f) => ({ ...f, mode: v }))}>
+                  <SelectTrigger className="bg-white/5">
+                    <SelectValue placeholder="Select mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CLASS_MODES.map((mode) => (
+                      <SelectItem key={mode.value} value={mode.value}>
+                        {mode.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Select value={form.location} onValueChange={(v: string) => setForm((f) => ({ ...f, location: v }))}>
+                  <SelectTrigger className="bg-white/5">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOCATIONS.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="budget">Budget Range</Label>
+              <Select value={form.budget} onValueChange={(v: string) => setForm((f) => ({ ...f, budget: v }))}>
+                <SelectTrigger className="bg-white/5">
+                  <SelectValue placeholder="Select budget range" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BUDGET_RANGES.map((budget) => (
+                    <SelectItem key={budget.value} value={budget.value}>
+                      {budget.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                placeholder="Describe your learning goals, schedule, etc."
+                placeholder="Describe your learning goals, preferred schedule, any specific requirements..."
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 required
@@ -96,29 +261,7 @@ export default function NewRequestPage() {
                 className="bg-white/5"
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="budget">Budget (optional)</Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  placeholder="e.g. 50"
-                  value={form.budget}
-                  onChange={(e) => setForm((f) => ({ ...f, budget: e.target.value }))}
-                  className="bg-white/5"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="location">Location (optional)</Label>
-                <Input
-                  id="location"
-                  placeholder="e.g. Online, NYC"
-                  value={form.location}
-                  onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                  className="bg-white/5"
-                />
-              </div>
-            </div>
+            
             <Button type="submit" variant="gradient" className="w-full" disabled={loading}>
               {loading ? "Posting..." : "Post Request"}
             </Button>

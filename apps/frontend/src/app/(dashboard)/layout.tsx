@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "motion/react";
@@ -43,6 +43,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -67,14 +68,26 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col glass-card border-r border-white/10">
-        <div className="flex h-16 items-center gap-2 border-b border-white/10 px-6">
+      <aside
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+        className={cn(
+          "fixed left-0 top-0 z-40 flex h-screen flex-col glass-card border-r border-white/10 transition-all duration-300 ease-in-out",
+          isExpanded ? "w-64" : "w-16"
+        )}
+      >
+        <div className="flex h-16 items-center gap-2 border-b border-white/10 px-4">
           <Link href="/" className="flex items-center gap-2">
-            <GraduationCap className="h-8 w-8 text-cyan-400" />
-            <span className="font-bold">TuitionMedia</span>
+            <GraduationCap className="h-8 w-8 shrink-0 text-cyan-400" />
+            <span className={cn(
+              "font-bold whitespace-nowrap transition-opacity duration-200",
+              isExpanded ? "opacity-100" : "opacity-0 w-0"
+            )}>
+              TuitionMedia
+            </span>
           </Link>
         </div>
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-1 p-2">
           {nav.map((item, i) => (
             <motion.div
               key={item.href}
@@ -85,29 +98,42 @@ export default function DashboardLayout({
               <Link
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200",
                   pathname === item.href ||
                   (item.href === "/dashboard/student" &&
                     pathname.startsWith("/dashboard/student/") &&
                     pathname !== "/dashboard/student/new")
                     ? "bg-cyan-500/20 text-cyan-400"
                     : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                  !isExpanded && "justify-center"
                 )}
+                title={!isExpanded ? item.label : undefined}
               >
-                <item.icon className="h-5 w-5" />
-                {item.label}
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span className={cn(
+                  "whitespace-nowrap transition-opacity duration-200",
+                  isExpanded ? "opacity-100" : "opacity-0 w-0 hidden"
+                )}>
+                  {item.label}
+                </span>
               </Link>
             </motion.div>
           ))}
         </nav>
-        <div className="border-t border-white/10 p-4">
+        <div className="border-t border-white/10 p-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start gap-2">
+              <Button variant="ghost" className={cn(
+                "w-full justify-start gap-2",
+                !isExpanded && "justify-center px-2"
+              )}>
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-xs font-bold text-cyan-400">
                   {(user.name ?? user.email).charAt(0).toUpperCase()}
                 </div>
-                <div className="flex min-w-0 flex-col items-start">
+                <div className={cn(
+                  "flex min-w-0 flex-col items-start transition-opacity duration-200",
+                  isExpanded ? "opacity-100" : "opacity-0 w-0 hidden"
+                )}>
                   <span className="truncate text-sm font-medium">{user.name ?? user.email}</span>
                   {user.name && <span className="truncate text-xs text-muted-foreground">{user.email}</span>}
                 </div>
@@ -127,7 +153,10 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      <main className="relative ml-64 flex-1 min-h-screen">
+      <main className={cn(
+        "relative flex-1 min-h-screen transition-all duration-300 ease-in-out",
+        isExpanded ? "ml-64" : "ml-16"
+      )}>
         <div className="p-8">{children}</div>
       </main>
     </div>
