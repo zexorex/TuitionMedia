@@ -47,7 +47,7 @@ async function main() {
   if (existing) {
     console.log(`User ${email} already exists with role: ${existing.role}`);
     if (existing.role !== "ADMIN") {
-      const updated = await prisma.user.update({
+      await prisma.user.update({
         where: { email },
         data: { role: "ADMIN" },
       });
