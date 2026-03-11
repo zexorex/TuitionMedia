@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiGet } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 type Application = {
   id: string;
@@ -24,10 +25,27 @@ export default function TutorApplicationsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiGet<Application[]>("/applications/my")
-      .then(setApplications)
-      .catch(() => setApplications([]))
-      .finally(() => setLoading(false));
+    const fetchApplications = async () => {
+      try {
+        const data = await apiGet<Application[]>("/applications/my");
+        setApplications(data);
+      } catch (error) {
+        console.error("Failed to fetch applications:", error);
+        // If it's an auth error, the user might need to re-login
+        if (error instanceof Error && error.message.includes("401")) {
+          toast({
+            title: "Authentication required", 
+            description: "Please log in again to continue.",
+            variant: "destructive",
+          });
+        }
+        setApplications([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
   }, []);
 
   const statusColors: Record<string, string> = {

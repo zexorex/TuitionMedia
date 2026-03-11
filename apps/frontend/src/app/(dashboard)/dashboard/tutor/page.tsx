@@ -45,10 +45,27 @@ export default function TutorJobBoardPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    apiGet<TuitionRequest[]>("/tuition-requests/open")
-      .then(setRequests)
-      .catch(() => setRequests([]))
-      .finally(() => setLoading(false));
+    const fetchRequests = async () => {
+      try {
+        const data = await apiGet<TuitionRequest[]>("/tuition-requests/open");
+        setRequests(data);
+      } catch (error) {
+        console.error("Failed to fetch tuition requests:", error);
+        // If it's an auth error, the user might need to re-login
+        if (error instanceof Error && error.message.includes("401")) {
+          toast({
+            title: "Authentication required",
+            description: "Please log in again to continue.",
+            variant: "destructive",
+          });
+        }
+        setRequests([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRequests();
   }, []);
 
   const filtered = useMemo(() => {
