@@ -11,7 +11,7 @@ import { apiGet } from "@/lib/api";
 type Request = {
   id: string;
   title: string;
-  subject: string;
+  subjects: string[];
   status: string;
   _count: { applications: number };
   createdAt: string;
@@ -30,6 +30,7 @@ export default function StudentDashboardPage() {
 
   const statusColors: Record<string, string> = {
     OPEN: "bg-emerald-500/20 text-emerald-400",
+    ASSIGNED: "bg-yellow-500/20 text-yellow-400",
     IN_PROGRESS: "bg-cyan-500/20 text-cyan-400",
     CLOSED: "bg-muted text-muted-foreground",
   };
@@ -104,7 +105,7 @@ export default function StudentDashboardPage() {
                     <CardContent>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{req.subject}</span>
+                          <span>{req.subjects?.join(", ") ?? "N/A"}</span>
                           <span>{req._count.applications} applications</span>
                         </div>
                         <ChevronRight className="h-5 w-5 text-cyan-400" />

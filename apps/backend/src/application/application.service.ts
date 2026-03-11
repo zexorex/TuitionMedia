@@ -3,15 +3,18 @@ import {
   ForbiddenException,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import type { ApplicationStatus } from "@prisma/client";
+
+const PLATFORM_FEE = 500; // 500 BDT
 
 @Injectable()
 export class ApplicationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(requestId: string, tutorId: string, message: string) {
+  async create(requestId: string, tutorId: string, coverLetter: string) {
     const request = await this.prisma.tuitionRequest.findUnique({
       where: { id: requestId },
     });
@@ -26,9 +29,9 @@ export class ApplicationService {
     if (existing) throw new ConflictException("You have already applied");
 
     return this.prisma.application.create({
-      data: { requestId, tutorId, message },
+      data: { requestId, tutorId, coverLetter },
       include: {
-        request: { select: { title: true, subject: true } },
+        request: { select: { title: true, subjects: true } },
         tutor: { select: { email: true } },
       },
     });
@@ -63,7 +66,8 @@ export class ApplicationService {
     });
   }
 
-  async accept(applicationId: string, studentUserId: string) {
+  // Student accepts - returns payment requirement
+  async acceptWithPaymentRequirement(applicationId: string, studentUserId: string) {
     const app = await this.prisma.application.findUnique({
       where: { id: applicationId },
       include: { request: true },
@@ -76,6 +80,44 @@ export class ApplicationService {
       throw new ConflictException("Application already processed");
     }
 
+    // Return payment requirement info
+    return {
+      requiresPayment: true,
+      amount: PLATFORM_FEE,
+      currency: "BDT",
+      applicationId,
+      message: "Please pay ৳500 platform fee to accept this application",
+    };
+  }
+
+  // Confirm acceptance after student payment
+  async confirmAcceptance(applicationId: string, studentUserId: string) {
+    const app = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { request: true },
+    });
+    if (!app) throw new NotFoundException("Application not found");
+    if (app.request.studentId !== studentUserId) {
+      throw new ForbiddenException("Not authorized");
+    }
+    if (app.status !== "PENDING") {
+      throw new ConflictException("Application already processed");
+    }
+
+    // Verify student has paid
+    const studentPayment = await this.prisma.payment.findFirst({
+      where: {
+        applicationId,
+        userId: studentUserId,
+        status: "VERIFIED",
+      },
+    });
+
+    if (!studentPayment) {
+      throw new BadRequestException("Payment not verified. Please complete payment first.");
+    }
+
+    // Accept the application
     const [updated] = await this.prisma.$transaction([
       this.prisma.application.update({
         where: { id: applicationId },
@@ -90,10 +132,109 @@ export class ApplicationService {
       }),
       this.prisma.tuitionRequest.update({
         where: { id: app.requestId },
-        data: { status: "IN_PROGRESS" },
+        data: { status: "ASSIGNED" }, // Changed to ASSIGNED to indicate tutor selected
       }),
     ]);
     return updated;
+  }
+
+  // Tutor confirms after student paid - returns payment requirement
+  async tutorConfirmWithPaymentRequirement(applicationId: string, tutorUserId: string) {
+    const app = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { request: true },
+    });
+    if (!app) throw new NotFoundException("Application not found");
+    if (app.tutorId !== tutorUserId) {
+      throw new ForbiddenException("Not authorized");
+    }
+    if (app.status !== "ACCEPTED") {
+      throw new ConflictException("Application must be accepted by student first");
+    }
+
+    // Check if student has paid
+    const studentPayment = await this.prisma.payment.findFirst({
+      where: {
+        applicationId,
+        status: "VERIFIED",
+      },
+    });
+
+    if (!studentPayment) {
+      throw new BadRequestException("Student has not completed payment yet");
+    }
+
+    // Check if tutor already paid
+    const tutorPayment = await this.prisma.payment.findFirst({
+      where: {
+        applicationId,
+        userId: tutorUserId,
+        status: "VERIFIED",
+      },
+    });
+
+    if (tutorPayment) {
+      // Already paid, confirm the request
+      await this.prisma.tuitionRequest.update({
+        where: { id: app.requestId },
+        data: { status: "IN_PROGRESS", contact_unlocked: true },
+      });
+      return { alreadyPaid: true, message: "Contact information unlocked" };
+    }
+
+    return {
+      requiresPayment: true,
+      amount: PLATFORM_FEE,
+      currency: "BDT",
+      applicationId,
+      message: "Please pay ৳500 platform fee to confirm and unlock contact details",
+    };
+  }
+
+  // Get payment status for an application
+  async getPaymentStatus(applicationId: string, userId: string) {
+    const app = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { request: true },
+    });
+    if (!app) throw new NotFoundException("Application not found");
+
+    // Check authorization
+    const isStudent = app.request.studentId === userId;
+    const isTutor = app.tutorId === userId;
+    if (!isStudent && !isTutor) {
+      throw new ForbiddenException("Not authorized");
+    }
+
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        applicationId,
+        status: "VERIFIED",
+      },
+    });
+
+    const userPayment = await this.prisma.payment.findFirst({
+      where: {
+        applicationId,
+        userId,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return {
+      studentPaid: payments.length >= 1,
+      tutorPaid: payments.length >= 2,
+      bothPaid: payments.length >= 2,
+      contactUnlocked: app.request.contact_unlocked,
+      userPayment: userPayment
+        ? {
+            id: userPayment.id,
+            status: userPayment.status,
+            method: userPayment.method,
+            amount: Number(userPayment.amount),
+          }
+        : null,
+    };
   }
 
   async reject(applicationId: string, studentUserId: string) {

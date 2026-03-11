@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards, UsePipes } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req, UseGuards, UsePipes, BadRequestException } from "@nestjs/common";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { CreateApplicationSchema } from "shared-schema";
 import { ApplicationService } from "./application.service";
@@ -43,14 +43,38 @@ export class ApplicationController {
     return this.service.findByTutor(req.user.id);
   }
 
+  // Student accepts an application - requires payment
   @Post(":id/accept")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("STUDENT")
-  accept(
+  async accept(
     @Param("id") id: string,
     @Req() req: { user: JwtUser },
   ) {
-    return this.service.accept(id, req.user.id);
+    // This now returns payment requirement info
+    return this.service.acceptWithPaymentRequirement(id, req.user.id);
+  }
+
+  // Confirm acceptance after payment
+  @Post(":id/confirm-acceptance")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("STUDENT")
+  async confirmAcceptance(
+    @Param("id") id: string,
+    @Req() req: { user: JwtUser },
+  ) {
+    return this.service.confirmAcceptance(id, req.user.id);
+  }
+
+  // Tutor confirms after student paid - requires tutor payment
+  @Post(":id/tutor-confirm")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("TUTOR")
+  async tutorConfirm(
+    @Param("id") id: string,
+    @Req() req: { user: JwtUser },
+  ) {
+    return this.service.tutorConfirmWithPaymentRequirement(id, req.user.id);
   }
 
   @Post(":id/reject")
@@ -61,5 +85,15 @@ export class ApplicationController {
     @Req() req: { user: JwtUser },
   ) {
     return this.service.reject(id, req.user.id);
+  }
+
+  // Check payment status for an application
+  @Get(":id/payment-status")
+  @UseGuards(JwtAuthGuard)
+  async getPaymentStatus(
+    @Param("id") id: string,
+    @Req() req: { user: JwtUser },
+  ) {
+    return this.service.getPaymentStatus(id, req.user.id);
   }
 }

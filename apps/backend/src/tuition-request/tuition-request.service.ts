@@ -6,18 +6,24 @@ import { Decimal } from "@prisma/client/runtime/library";
 export interface CreateTuitionRequestDto {
   title: string;
   description: string;
-  subject: string;
+  subjects: string[];
+  level?: string;
+  mode?: string;
   budget?: number;
-  location?: string;
+  division?: string;
+  area?: string;
 }
 
 export interface UpdateTuitionRequestDto {
   title?: string;
   description?: string;
-  subject?: string;
+  subjects?: string[];
+  level?: string;
+  mode?: string;
   budget?: number;
   status?: RequestStatus;
-  location?: string;
+  division?: string;
+  area?: string;
 }
 
 @Injectable()
@@ -30,9 +36,12 @@ export class TuitionRequestService {
         studentId,
         title: dto.title,
         description: dto.description,
-        subject: dto.subject,
+        subjects: dto.subjects,
+        level: dto.level,
+        mode: dto.mode,
         budget: dto.budget != null ? new Decimal(dto.budget) : null,
-        location: dto.location,
+        division: dto.division,
+        area: dto.area,
       },
       include: {
         student: { select: { email: true, name: true } },
@@ -40,11 +49,12 @@ export class TuitionRequestService {
     });
   }
 
-  async findAll(filters?: { status?: RequestStatus; subject?: string }) {
+  async findAll(filters?: { status?: RequestStatus; subject?: string; division?: string }) {
     return this.prisma.tuitionRequest.findMany({
       where: {
         ...(filters?.status && { status: filters.status }),
-        ...(filters?.subject && { subject: { contains: filters.subject, mode: "insensitive" } }),
+        ...(filters?.subject && { subjects: { has: filters.subject } }),
+        ...(filters?.division && { division: filters.division }),
       },
       include: {
         student: { select: { email: true, name: true } },
@@ -69,10 +79,10 @@ export class TuitionRequestService {
     const req = await this.prisma.tuitionRequest.findUnique({
       where: { id },
       include: {
-        student: { select: { email: true, name: true } },
+        student: { select: { email: true, name: true, phone: true } },
         applications: {
           include: {
-            tutor: { select: { email: true, name: true } },
+            tutor: { select: { email: true, name: true, phone: true } },
           },
         },
       },
@@ -112,10 +122,13 @@ export class TuitionRequestService {
       data: {
         ...(dto.title != null && { title: dto.title }),
         ...(dto.description != null && { description: dto.description }),
-        ...(dto.subject != null && { subject: dto.subject }),
+        ...(dto.subjects != null && { subjects: dto.subjects }),
+        ...(dto.level != null && { level: dto.level }),
+        ...(dto.mode != null && { mode: dto.mode }),
         ...(dto.budget != null && { budget: new Decimal(dto.budget) }),
         ...(dto.status != null && { status: dto.status }),
-        ...(dto.location != null && { location: dto.location }),
+        ...(dto.division != null && { division: dto.division }),
+        ...(dto.area != null && { area: dto.area }),
       },
     });
   }

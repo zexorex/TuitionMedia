@@ -3,33 +3,38 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, XCircle, CreditCard, Lock, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiGet, apiPost, apiDelete } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import { PaymentMethodSelector } from "@/components/payment/payment-method-selector";
 
 type Application = {
   id: string;
-  message: string;
+  coverLetter: string;
   status: string;
-  tutor: { email: string; name: string | null };
+  tutor: { email: string; name: string | null; phone: string | null };
 };
 
 type TuitionRequest = {
   id: string;
   title: string;
   description: string;
-  subject: string;
+  subjects: string[];
   status: string;
   budget: string | null;
-  location: string | null;
+  division: string | null;
+  area: string | null;
+  contact_unlocked: boolean;
   createdAt: string;
   applications: Application[];
+  student: { email: string; name: string | null; phone: string | null };
 };
 
 const STATUS_COLORS: Record<string, string> = {
   OPEN: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  ASSIGNED: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
   IN_PROGRESS: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
   CLOSED: "bg-white/10 text-muted-foreground border-white/10",
   CANCELLED: "bg-red-500/20 text-red-400 border-red-500/30",
@@ -45,6 +50,10 @@ export default function RequestDetailPage() {
   const [accepting, setAccepting] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentApplicationId, setPaymentApplicationId] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState(500);
+  const [currentPaymentId, setCurrentPaymentId] = useState<string | null>(null);
 
   function refresh() {
     return apiGet<TuitionRequest>(`/tuition-requests/${requestId}`).then(setRequest);
@@ -57,12 +66,23 @@ export default function RequestDetailPage() {
       .finally(() => setLoading(false));
   }, [requestId]);
 
-  async function accept(applicationId: string) {
+  async function initiateAccept(applicationId: string) {
     setAccepting(applicationId);
     try {
-      await apiPost(`/applications/${applicationId}/accept`, {});
-      toast({ title: "Application accepted!", variant: "success" });
-      await refresh();
+      const result = await apiPost<{
+        requiresPayment: boolean;
+        amount: number;
+        applicationId: string;
+      }>(`/applications/${applicationId}/accept`, {});
+      
+      if (result.requiresPayment) {
+        setPaymentApplicationId(applicationId);
+        setPaymentAmount(result.amount);
+        setShowPayment(true);
+      } else {
+        toast({ title: "Application accepted!", variant: "success" });
+        await refresh();
+      }
     } catch (err) {
       toast({
         title: "Failed",
@@ -73,6 +93,48 @@ export default function RequestDetailPage() {
       setAccepting(null);
     }
   }
+
+  const handleInitiatePayment = async (phoneNumber: string) => {
+    if (!paymentApplicationId) throw new Error("No application selected");
+    const result = await apiPost<{ id: string; demoOtp?: string }>(
+      `/payments/student/initiate`,
+      { applicationId: paymentApplicationId, phoneNumber }
+    );
+    setCurrentPaymentId(result.id);
+    return result;
+  };
+
+  const handleVerifyPayment = async (otp: string) => {
+    if (!currentPaymentId) throw new Error("No payment in progress");
+    const result = await apiPost<{ success: boolean; contactUnlocked?: boolean }>(
+      `/payments/${currentPaymentId}/verify`,
+      { otp }
+    );
+    if (result.success) {
+      // Confirm the acceptance
+      await apiPost(`/applications/${paymentApplicationId}/confirm-acceptance`, {});
+    }
+    return result;
+  };
+
+  const handleResendOtp = async () => {
+    if (!currentPaymentId) throw new Error("No payment in progress");
+    return apiPost<{ demoOtp?: string }>(`/payments/${currentPaymentId}/resend-otp`, {});
+  };
+
+  const handlePaymentSuccess = async () => {
+    setShowPayment(false);
+    setCurrentPaymentId(null);
+    setPaymentApplicationId(null);
+    toast({ title: "Payment successful! Application accepted.", variant: "success" });
+    await refresh();
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
+    setCurrentPaymentId(null);
+    setPaymentApplicationId(null);
+  };
 
   async function reject(applicationId: string) {
     setRejecting(applicationId);
@@ -147,6 +209,19 @@ export default function RequestDetailPage() {
       animate={{ opacity: 1, y: 0 }}
       className="max-w-4xl"
     >
+      {/* Payment Modal */}
+      {showPayment && (
+        <PaymentMethodSelector
+          amount={paymentAmount}
+          onInitiate={handleInitiatePayment}
+          onVerify={handleVerifyPayment}
+          onResendOtp={handleResendOtp}
+          onSuccess={handlePaymentSuccess}
+          onCancel={handlePaymentCancel}
+          userType="student"
+        />
+      )}
+
       <Button variant="ghost" className="mb-6 -ml-2" onClick={() => router.back()}>
         ← Back
       </Button>
@@ -169,17 +244,19 @@ export default function RequestDetailPage() {
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-cyan-500/20 px-3 py-1 text-sm text-cyan-400">
-              {request.subject}
-            </span>
+            {request.subjects?.map((subject) => (
+              <span key={subject} className="rounded-full bg-cyan-500/20 px-3 py-1 text-sm text-cyan-400">
+                {subject}
+              </span>
+            ))}
             <span className={`rounded-full border px-3 py-1 text-sm ${STATUS_COLORS[request.status] ?? "bg-white/10 text-muted-foreground"}`}>
               {request.status.replace("_", " ")}
             </span>
             {request.budget && (
-              <span className="text-sm text-muted-foreground">${request.budget}/hr</span>
+              <span className="text-sm text-muted-foreground">৳{request.budget}/hr</span>
             )}
-            {request.location && (
-              <span className="text-sm text-muted-foreground">📍 {request.location}</span>
+            {request.division && (
+              <span className="text-sm text-muted-foreground">📍 {request.division}{request.area ? `, ${request.area}` : ""}</span>
             )}
           </div>
         </CardHeader>
@@ -206,14 +283,40 @@ export default function RequestDetailPage() {
                 <CardTitle className="text-lg">Accepted</CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {acceptedApp.tutor.name ?? acceptedApp.tutor.email}
-                  {acceptedApp.tutor.name && (
-                    <span className="ml-1 text-xs">({acceptedApp.tutor.email})</span>
-                  )}
                 </p>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{acceptedApp.message}</p>
+              <p className="text-sm text-muted-foreground mb-4">{acceptedApp.coverLetter}</p>
+              
+              {/* Contact Info - Only show if unlocked */}
+              {request.contact_unlocked ? (
+                <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20">
+                  <p className="text-sm font-medium text-green-400 mb-2">Contact Information Unlocked</p>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span>{acceptedApp.tutor.email}</span>
+                    </div>
+                    {acceptedApp.tutor.phone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span>{acceptedApp.tutor.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/20">
+                  <div className="flex items-center gap-2 text-yellow-400">
+                    <Lock className="h-4 w-4" />
+                    <span className="text-sm font-medium">Contact info locked</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Waiting for tutor to complete payment to unlock contact details
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -238,16 +341,24 @@ export default function RequestDetailPage() {
                     {app.tutor.name && (
                       <p className="text-xs text-muted-foreground">{app.tutor.email}</p>
                     )}
-                    <p className="mt-2 text-sm text-muted-foreground">{app.message}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{app.coverLetter}</p>
                   </div>
                   <div className="flex shrink-0 gap-2">
                     <Button
                       variant="gradient"
                       size="sm"
-                      onClick={() => accept(app.id)}
+                      onClick={() => initiateAccept(app.id)}
                       disabled={!!accepting || !!rejecting}
+                      className="gap-1"
                     >
-                      {accepting === app.id ? "Accepting..." : "Accept"}
+                      {accepting === app.id ? (
+                        "Processing..."
+                      ) : (
+                        <>
+                          <CreditCard className="h-3.5 w-3.5" />
+                          Accept (৳500)
+                        </>
+                      )}
                     </Button>
                     <Button
                       variant="outline"
