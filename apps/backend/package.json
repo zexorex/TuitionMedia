@@ -9,7 +9,8 @@
     "start:debug": "nest start --debug --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "clean": "rm -rf dist",
-    "seed:admin": "ts-node prisma/seed-admin.ts"
+    "seed:admin": "ts-node prisma/seed-admin.ts",
+    "seed:test": "ts-node prisma/seed-test-data.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed-admin.ts"
