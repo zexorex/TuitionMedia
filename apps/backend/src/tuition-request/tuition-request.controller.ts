@@ -46,7 +46,7 @@ export class TuitionRequestController {
   @UsePipes(new ZodValidationPipe(CreateTuitionRequestSchema))
   create(
     @Req() req: { user: JwtUser },
-    @Body() body: { title: string; description: string; subject: string; budget?: number; location?: string },
+    @Body() body: { title: string; description: string; subjects: string[]; level?: string; mode?: string; budget?: number; division?: string; area?: string },
   ) {
     return this.service.create(req.user.id, body);
   }
@@ -63,7 +63,7 @@ export class TuitionRequestController {
   update(
     @Param("id") id: string,
     @Req() req: { user: JwtUser },
-    @Body() body: { title?: string; description?: string; subject?: string; budget?: number; status?: RequestStatus; location?: string },
+    @Body() body: { title?: string; description?: string; subjects?: string[]; level?: string; mode?: string; budget?: number; status?: RequestStatus; division?: string; area?: string },
   ) {
     return this.service.update(id, req.user.id, req.user.role, body);
   }

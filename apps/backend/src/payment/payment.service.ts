@@ -173,7 +173,7 @@ export class PaymentService {
       throw new BadRequestException("Invalid payment status");
     }
 
-    if (payment.otpExpiresAt < new Date()) {
+    if (payment.otpExpiresAt && payment.otpExpiresAt < new Date()) {
       await this.prisma.payment.update({
         where: { id: paymentId },
         data: { status: PaymentStatus.EXPIRED },
@@ -186,7 +186,7 @@ export class PaymentService {
     }
 
     // Mark payment as verified
-    const verifiedPayment = await this.prisma.payment.update({
+    await this.prisma.payment.update({
       where: { id: paymentId },
       data: {
         status: PaymentStatus.VERIFIED,
@@ -214,7 +214,6 @@ export class PaymentService {
     return {
       success: true,
       message: "Payment verified successfully!",
-      contactUnlocked: allPayments.length >= 2,
     };
   }
 

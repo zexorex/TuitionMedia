@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards, UsePipes, BadRequestException } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req, UseGuards, UsePipes } from "@nestjs/common";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { CreateApplicationSchema } from "shared-schema";
 import { ApplicationService } from "./application.service";

@@ -33,7 +33,7 @@ export class AuthService {
     password: string,
     role: UserRole,
     name?: string,
-    profileData?: { bio?: string; subjects?: string[]; hourlyRate?: number; education?: string } | { gradeLevel?: string; preferredLocation?: string },
+    profileData?: { bio?: string; subjects?: string[]; hourlyRate?: number; education?: string } | { gradeLevel?: string; preferredDivision?: string; preferredAreas?: string[] },
   ): Promise<AuthTokens> {
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -79,7 +79,8 @@ export class AuthService {
           id: crypto.randomUUID(),
           user_id: user.id,
           grade: studentProfile?.gradeLevel,
-          location: studentProfile?.preferredLocation,
+          division: studentProfile?.preferredDivision,
+          areas: studentProfile?.preferredAreas ?? [],
           subjects: [],
           updated_at: new Date(),
         },
@@ -146,7 +147,7 @@ export class AuthService {
     return this.prisma.tutorProfile.findUnique({ where: { user_id: userId } });
   }
 
-  async upsertTutorProfile(userId: string, data: { bio?: string; subjects?: string[]; hourly_rate?: number; education?: string; location?: string; experience?: number }) {
+  async upsertTutorProfile(userId: string, data: { bio?: string; subjects?: string[]; hourly_rate?: number; education?: string; division?: string; areas?: string[]; experience?: number }) {
     const existing = await this.prisma.tutorProfile.findUnique({ where: { user_id: userId } });
     try {
       if (existing) {
@@ -163,7 +164,8 @@ export class AuthService {
           subjects: data.subjects ?? [],
           hourly_rate: data.hourly_rate ?? 0,
           education: data.education,
-          location: data.location,
+          division: data.division,
+          areas: data.areas ?? [],
           experience: data.experience ?? 0,
           qualifications: [],
           updated_at: new Date(),
@@ -178,7 +180,7 @@ export class AuthService {
     return this.prisma.studentProfile.findUnique({ where: { user_id: userId } });
   }
 
-  async upsertStudentProfile(userId: string, data: { grade?: string; school?: string; subjects?: string[]; goals?: string; location?: string }) {
+  async upsertStudentProfile(userId: string, data: { grade?: string; school?: string; subjects?: string[]; goals?: string; division?: string; areas?: string[] }) {
     const existing = await this.prisma.studentProfile.findUnique({ where: { user_id: userId } });
     try {
       if (existing) {
@@ -195,7 +197,8 @@ export class AuthService {
           school: data.school,
           subjects: data.subjects ?? [],
           goals: data.goals,
-          location: data.location,
+          division: data.division,
+          areas: data.areas ?? [],
           updated_at: new Date(),
         },
       });
