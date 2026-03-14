@@ -48,7 +48,7 @@ export class ApplicationService {
     return this.prisma.application.findMany({
       where: { requestId },
       include: {
-        tutor: { select: { email: true, name: true } },
+        tutor: { select: { email: true, name: true, phone: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -59,7 +59,7 @@ export class ApplicationService {
       where: { tutorId },
       include: {
         request: {
-          include: { student: { select: { email: true, name: true } } },
+          include: { student: { select: { email: true, name: true, phone: true } } },
         },
       },
       orderBy: { createdAt: "desc" },
