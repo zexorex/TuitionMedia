@@ -44,9 +44,12 @@ export type LoginUser = z.infer<typeof LoginUserSchema>;
 export const CreateTuitionRequestSchema = z.object({
   title: z.string().min(1, "Title required").max(200),
   description: z.string().min(1, "Description required").max(2000),
-  subject: z.string().min(1, "Subject required").max(100),
+  subjects: z.array(z.string()).min(1, "At least one subject required"),
+  level: z.string().optional(),
+  mode: z.string().optional(),
   budget: z.number().positive().optional(),
-  location: z.string().max(200).optional(),
+  division: z.string().optional(),
+  area: z.string().optional(),
 });
 export type CreateTuitionRequest = z.infer<typeof CreateTuitionRequestSchema>;
 
