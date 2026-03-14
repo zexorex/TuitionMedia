@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface NagadPaymentProps {
   amount: number;
-  onInitiate: (phoneNumber: string) => Promise<{ id: string }>;
+  onInitiate: (phoneNumber: string, method: "NAGAD") => Promise<{ id: string }>;
   onVerify: (otp: string) => Promise<{ success: boolean; contactUnlocked?: boolean }>;
   onResendOtp: () => Promise<{}>;
   onSuccess: () => void;
@@ -40,7 +40,7 @@ export function NagadPayment({
     setError("");
 
     try {
-      await onInitiate(phoneNumber);
+      await onInitiate(phoneNumber, "NAGAD");
       setStep("otp");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to initiate payment");

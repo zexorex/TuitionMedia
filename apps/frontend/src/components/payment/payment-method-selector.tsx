@@ -11,7 +11,7 @@ type PaymentMethod = "BKASH" | "NAGAD";
 
 interface PaymentMethodSelectorProps {
   amount?: number;
-  onInitiate: (phoneNumber: string) => Promise<{ id: string }>;
+  onInitiate: (phoneNumber: string, method: PaymentMethod) => Promise<{ id: string }>;
   onVerify: (otp: string) => Promise<{ success: boolean; contactUnlocked?: boolean }>;
   onResendOtp: () => Promise<{}>;
   onSuccess: () => void;
@@ -31,7 +31,8 @@ export function PaymentMethodSelector({
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
 
   const handleInitiate = async (phoneNumber: string) => {
-    const result = await onInitiate(phoneNumber);
+    if (!selectedMethod) throw new Error("No payment method selected");
+    const result = await onInitiate(phoneNumber, selectedMethod);
     return result;
   };
 

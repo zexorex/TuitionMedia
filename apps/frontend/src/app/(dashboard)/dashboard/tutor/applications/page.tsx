@@ -85,11 +85,11 @@ export default function TutorApplicationsPage() {
     }
   };
 
-  const handleInitiatePayment = async (phoneNumber: string) => {
+  const handleInitiatePayment = async (phoneNumber: string, method: "BKASH" | "NAGAD") => {
     if (!paymentApplicationId) throw new Error("No application selected");
-    const result = await apiPost<{ id: string; demoOtp?: string }>(
-      `/payments/tutor/initiate`,
-      { applicationId: paymentApplicationId, phoneNumber }
+    const result = await apiPost<{ id: string }>(
+      `/payments/tutor/${paymentApplicationId}`,
+      { phoneNumber, method }
     );
     setCurrentPaymentId(result.id);
     return result;
