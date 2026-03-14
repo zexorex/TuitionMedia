@@ -29,13 +29,9 @@ export function PaymentMethodSelector({
   userType,
 }: PaymentMethodSelectorProps) {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-  const [demoOtp, setDemoOtp] = useState<string | null>(null);
 
   const handleInitiate = async (phoneNumber: string) => {
     const result = await onInitiate(phoneNumber);
-    if (result.demoOtp) {
-      setDemoOtp(result.demoOtp);
-    }
     return result;
   };
 
@@ -45,9 +41,6 @@ export function PaymentMethodSelector({
 
   const handleResendOtp = async () => {
     const result = await onResendOtp();
-    if (result.demoOtp) {
-      setDemoOtp(result.demoOtp);
-    }
     return result;
   };
 
