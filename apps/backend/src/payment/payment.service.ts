@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { PaymentStatus, PaymentMethod } from "@prisma/client";
+import { PaymentStatus, PaymentMethod, ApplicationStatus } from "@prisma/client";
 import { randomInt } from "crypto";
 
 const PLATFORM_FEE = 500; // 500 BDT
@@ -199,12 +199,18 @@ export class PaymentService {
       },
     });
 
-    // If both paid (2 payments), unlock contact information
+    // If both paid (2 payments), unlock contact information and set status to BOTH_PAID
     if (allPayments.length >= 2) {
-      await this.prisma.tuitionRequest.update({
-        where: { id: payment.requestId },
-        data: { contact_unlocked: true },
-      });
+      await this.prisma.$transaction([
+        this.prisma.tuitionRequest.update({
+          where: { id: payment.requestId },
+          data: { contact_unlocked: true },
+        }),
+        this.prisma.application.update({
+          where: { id: payment.applicationId },
+          data: { status: "BOTH_PAID" as ApplicationStatus },
+        })
+      ]);
     }
 
     return {

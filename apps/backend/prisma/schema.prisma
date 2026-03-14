@@ -312,6 +312,9 @@ enum UserRole {
 
 enum ApplicationStatus {
   PENDING
+  STUDENT_PAID
+  BOTH_PAID
+  CONNECTED
   ACCEPTED
   REJECTED
   WITHDRAWN

@@ -19,6 +19,7 @@ export default function SignupPage() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"STUDENT" | "TUTOR">("STUDENT");
   const [loading, setLoading] = useState(false);
@@ -33,10 +34,22 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    
+    // Validate phone number
+    if (!/^01[3-9]\d{8}$/.test(phone)) {
+      toast({
+        title: "Invalid phone number",
+        description: "Please enter a valid 11-digit Bangladesh phone number (e.g. 017XXXXXXXX)",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await apiPost<{ accessToken: string; user: { id: string; email: string; name?: string; role: string } }>(
         "/auth/register",
-        { email, password, role, ...(name.trim() && { name: name.trim() }) },
+        { email, phone, password, role, ...(name.trim() && { name: name.trim() }) },
       );
       setAuth(
         { id: res.user.id, email: res.user.email, name: res.user.name, role: res.user.role as "STUDENT" | "TUTOR" | "ADMIN" },
@@ -116,8 +129,20 @@ export default function SignupPage() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                   className="bg-white/5 border-white/10"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="01XXXXXXXXX"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="bg-white/5 border-white/10"
+                  required
                 />
               </div>
               <div className="space-y-2">

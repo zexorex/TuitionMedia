@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Phone, ArrowLeft, Shield, CheckCircle, Loader2, Lock } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,102 +90,86 @@ export function NagadPayment({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md"
+        className="w-full max-w-[380px]"
       >
-        {/* Nagad styled modal */}
-        <Card className="overflow-hidden rounded-2xl shadow-2xl border-0">
-          {/* Header */}
-          <div className="bg-[#E2136E] px-6 py-4 text-white">
-            <div className="flex items-center gap-3">
-              {step !== "phone" && step !== "success" && (
-                <button onClick={() => setStep("phone")} className="p-1 hover:bg-white/20 rounded-full transition-colors">
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-              )}
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#E2136E] font-bold text-lg">
-                  N
-                </div>
-                <div>
-                  <h2 className="font-bold text-lg">Nagad Payment</h2>
-                  <p className="text-sm text-white/80">Secure Payment</p>
-                </div>
-              </div>
-            </div>
+        <Card className="overflow-hidden bg-[#AA1614] shadow-2xl rounded-sm border-0 text-white relative">
+          {/* Header language toggle */}
+          <div className="absolute top-4 right-4 flex text-xs font-bold bg-transparent border border-white/30 rounded-sm overflow-hidden">
+            <div className="px-2 py-1 bg-[#AA1614] text-white">বাংলা</div>
+            <div className="px-2 py-1 bg-white text-[#AA1614]">Eng</div>
           </div>
 
-          <CardContent className="p-0">
+          <CardContent className="p-8 pt-12 text-center min-h-[600px] flex flex-col">
+            {/* Merchant Info */}
+            <div className="mb-8">
+              <div className="mx-auto w-16 h-16 mb-2">
+                <img src="/cart-icon.png" alt="Cart" className="w-full h-full object-contain filter invert" onError={(e) => e.currentTarget.style.display = 'none'} />
+              </div>
+              <h2 className="text-xl font-bold">TuitionMedia</h2>
+            </div>
+
+            {/* Invoice Details */}
+            <div className="text-left space-y-3 mb-12 text-[15px]">
+              <div className="flex gap-2">
+                <span className="font-bold whitespace-nowrap">Invoice No:</span>
+                <span className="break-all opacity-90">TM{Math.floor(Math.random() * 10000000000)}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-bold">Total Amount:</span>
+                <span>BDT {amount}.00</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-bold">Charge:</span>
+                <span>BDT 0</span>
+              </div>
+            </div>
+
             <AnimatePresence mode="wait">
               {step === "phone" && (
                 <motion.div
                   key="phone"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="p-6 space-y-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col flex-grow justify-between"
                 >
-                  {/* Amount Display */}
-                  <div className="bg-gradient-to-r from-[#E2136E]/10 to-[#E2136E]/5 rounded-xl p-6 text-center border border-[#E2136E]/20">
-                    <p className="text-sm text-gray-600 mb-2 font-medium">Payment Amount</p>
-                    <p className="text-4xl font-bold text-[#E2136E]">৳ {amount}</p>
-                    <div className="flex items-center justify-center gap-2 mt-3 text-xs text-gray-500">
-                      <Lock className="h-3 w-3" />
-                      <span>Secure Transaction</span>
-                    </div>
-                  </div>
-
-                  {/* Phone Input */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-semibold text-gray-700">
-                      Nagad Account Number
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <div className="space-y-4">
+                    <p className="font-bold text-[15px]">Your Nagad Account Number</p>
+                    
+                    <div className="flex justify-center items-center gap-1">
                       <Input
                         type="tel"
-                        placeholder="01XXXXXXXXX"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="pl-10 h-12 text-lg border-gray-200 focus:border-[#E2136E] focus:ring-[#E2136E] rounded-lg"
+                        className="h-10 text-center tracking-[0.5em] text-gray-800 bg-white border-0 rounded-sm focus-visible:ring-0 focus-visible:ring-offset-0 text-lg"
+                        maxLength={11}
                       />
                     </div>
-                    <p className="text-xs text-gray-500">
-                      Enter your Nagad registered mobile number
-                    </p>
+                    
+                    {error && <p className="text-sm text-red-200 mt-2">{error}</p>}
                   </div>
 
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p className="text-sm text-red-600 text-center">{error}</p>
+                  <div className="mt-8 space-y-6">
+                    <div className="flex items-center justify-center gap-2 text-sm">
+                      <input type="checkbox" id="terms" className="rounded-none border-white accent-white" />
+                      <label htmlFor="terms">I agree to the <span className="font-bold underline">terms and</span><br/><span className="font-bold underline">conditions</span></label>
                     </div>
-                  )}
 
-                  {/* Buttons */}
-                  <div className="space-y-3">
-                    <Button
-                      onClick={handleInitiate}
-                      disabled={loading}
-                      className="w-full h-12 bg-[#E2136E] hover:bg-[#C0105E] text-white font-semibold rounded-lg shadow-lg"
-                    >
-                      {loading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        "Proceed to Payment"
-                      )}
-                    </Button>
-                    <Button
-                      onClick={onCancel}
-                      variant="outline"
-                      className="w-full h-12 rounded-lg border-gray-200"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-
-                  {/* Security Badge */}
-                  <div className="flex items-center justify-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg py-3">
-                    <Shield className="h-4 w-4" />
-                    <span>Secured by Nagad 256-bit encryption</span>
+                    <div className="flex gap-4 px-2">
+                      <button
+                        onClick={handleInitiate}
+                        disabled={loading}
+                        className="flex-1 py-2 bg-white text-[#AA1614] font-bold rounded-sm hover:bg-gray-100 transition-colors disabled:opacity-50"
+                      >
+                        {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : "Proceed"}
+                      </button>
+                      <button
+                        onClick={onCancel}
+                        className="flex-1 py-2 bg-white text-[#AA1614] font-bold rounded-sm hover:bg-gray-100 transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -193,67 +177,48 @@ export function NagadPayment({
               {step === "otp" && (
                 <motion.div
                   key="otp"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="p-6 space-y-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col flex-grow justify-between"
                 >
-                  {/* OTP Info */}
-                  <div className="text-center">
-                    <div className="mx-auto w-16 h-16 bg-[#E2136E]/10 rounded-full flex items-center justify-center mb-4">
-                      <Phone className="h-8 w-8 text-[#E2136E]" />
+                  <div className="space-y-4">
+                    <p className="font-bold text-[15px]">Enter Verification Code</p>
+                    <p className="text-sm opacity-90">Code sent to: {phoneNumber}</p>
+                    
+                    <div className="flex justify-center items-center">
+                      <Input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        className="h-10 text-center tracking-[1em] text-gray-800 bg-white border-0 rounded-sm focus-visible:ring-0 focus-visible:ring-offset-0 text-lg w-3/4"
+                        maxLength={6}
+                      />
                     </div>
-                    <p className="text-gray-600 font-medium">
-                      Enter the 6-digit OTP sent to
-                    </p>
-                    <p className="font-bold text-lg text-[#E2136E] mt-1">{phoneNumber}</p>
+
+                    {error && <p className="text-sm text-red-200 mt-2">{error}</p>}
                   </div>
 
-                  {/* OTP Input */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-semibold text-gray-700 text-center block">
-                      Enter OTP Code
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="••••••"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      className="h-14 text-center text-2xl tracking-[0.5em] font-bold border-2 border-gray-200 focus:border-[#E2136E] focus:ring-[#E2136E] rounded-lg"
-                      maxLength={6}
-                    />
-                    <p className="text-xs text-gray-500 text-center">
-                      Enter the 6-digit code from your Nagad app
-                    </p>
-                  </div>
+                  <div className="mt-8 space-y-6">
+                    <button onClick={handleResendOtp} disabled={loading} className="text-sm underline">
+                      Resend Code
+                    </button>
 
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p className="text-sm text-red-600 text-center">{error}</p>
+                    <div className="flex gap-4 px-2">
+                      <button
+                        onClick={handleVerify}
+                        disabled={loading || otp.length !== 6}
+                        className="flex-1 py-2 bg-white text-[#AA1614] font-bold rounded-sm hover:bg-gray-100 transition-colors disabled:opacity-50"
+                      >
+                        {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : "Proceed"}
+                      </button>
+                      <button
+                        onClick={() => setStep("phone")}
+                        className="flex-1 py-2 bg-white text-[#AA1614] font-bold rounded-sm hover:bg-gray-100 transition-colors"
+                      >
+                        Back
+                      </button>
                     </div>
-                  )}
-
-                  {/* Buttons */}
-                  <div className="space-y-3">
-                    <Button
-                      onClick={handleVerify}
-                      disabled={loading || otp.length !== 6}
-                      className="w-full h-12 bg-[#E2136E] hover:bg-[#C0105E] text-white font-semibold rounded-lg shadow-lg"
-                    >
-                      {loading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        "Verify & Complete Payment"
-                      )}
-                    </Button>
-                    <Button
-                      onClick={handleResendOtp}
-                      variant="ghost"
-                      disabled={loading}
-                      className="w-full text-[#E2136E] hover:text-[#C0105E] font-medium"
-                    >
-                      Resend OTP Code
-                    </Button>
                   </div>
                 </motion.div>
               )}
@@ -261,32 +226,46 @@ export function NagadPayment({
               {step === "success" && (
                 <motion.div
                   key="success"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="p-8 text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col flex-grow items-center justify-center mt-8"
                 >
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", delay: 0.2 }}
-                    className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100"
+                    className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#AA1614]"
                   >
-                    <CheckCircle className="h-12 w-12 text-green-600" />
+                    <CheckCircle className="h-12 w-12" />
                   </motion.div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Payment Successful!
+                  <h3 className="text-2xl font-bold mb-2">
+                    Success!
                   </h3>
-                  <p className="text-gray-600 mb-4">
-                    ৳ {amount} has been successfully paid
+                  <p className="mb-8 opacity-90">
+                    Payment of BDT {amount} completed
                   </p>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p className="text-sm text-green-700 font-medium">
-                      ✓ Contact information has been unlocked
-                    </p>
-                  </div>
+                  <Button
+                    onClick={onSuccess}
+                    className="w-full h-12 bg-white hover:bg-gray-100 text-[#AA1614] font-bold rounded-sm"
+                  >
+                    Continue to Dashboard
+                  </Button>
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Footer Logo */}
+            <div className="mt-8 flex justify-center pb-4">
+              <img 
+                src="https://download.logo.wine/logo/nagad/nagad-logo.png" 
+                alt="Nagad" 
+                className="h-16 object-contain filter invert brightness-0"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement!.innerHTML = '<div class="text-3xl font-bold tracking-wider">নগদ</div>';
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
       </motion.div>

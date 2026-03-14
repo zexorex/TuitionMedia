@@ -6,7 +6,7 @@ import {
   BadRequestException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import type { ApplicationStatus } from "@prisma/client";
+import { ApplicationStatus } from "@prisma/client";
 
 const PLATFORM_FEE = 500; // 500 BDT
 
@@ -117,22 +117,23 @@ export class ApplicationService {
       throw new BadRequestException("Payment not verified. Please complete payment first.");
     }
 
-    // Accept the application
+    // Accept the application (STUDENT_PAID)
     const [updated] = await this.prisma.$transaction([
       this.prisma.application.update({
         where: { id: applicationId },
-        data: { status: "ACCEPTED" as ApplicationStatus },
+        data: { status: "STUDENT_PAID" as ApplicationStatus },
       }),
       this.prisma.application.updateMany({
         where: {
           requestId: app.requestId,
           id: { not: applicationId },
+          status: "PENDING",
         },
         data: { status: "REJECTED" as ApplicationStatus },
       }),
       this.prisma.tuitionRequest.update({
         where: { id: app.requestId },
-        data: { status: "ASSIGNED" }, // Changed to ASSIGNED to indicate tutor selected
+        data: { status: "CLOSED" },
       }),
     ]);
     return updated;
@@ -148,7 +149,7 @@ export class ApplicationService {
     if (app.tutorId !== tutorUserId) {
       throw new ForbiddenException("Not authorized");
     }
-    if (app.status !== "ACCEPTED") {
+    if (app.status !== ApplicationStatus.STUDENT_PAID) {
       throw new ConflictException("Application must be accepted by student first");
     }
 
