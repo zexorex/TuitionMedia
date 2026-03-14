@@ -200,7 +200,8 @@ export default function RequestDetailPage() {
   }
 
   const pendingApps = request.applications.filter((a) => a.status === "PENDING");
-  const acceptedApp = request.applications.find((a) => a.status === "ACCEPTED");
+  const studentPaidApp = request.applications.find((a) => a.status === "STUDENT_PAID");
+  const bothPaidApp = request.applications.find((a) => a.status === "BOTH_PAID");
   const isOpen = request.status === "OPEN";
 
   return (
@@ -269,25 +270,27 @@ export default function RequestDetailPage() {
         Applications ({request.applications.length})
       </h2>
 
-      {/* Accepted application */}
-      {acceptedApp && (
+      {/* Student Paid application */}
+      {(studentPaidApp || bothPaidApp) && (
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           className="mb-4"
         >
-          <Card className="border-emerald-500/30 bg-emerald-500/5">
+          <Card className={`border-emerald-500/30 ${bothPaidApp ? 'bg-emerald-500/10' : 'bg-emerald-500/5'}`}>
             <CardHeader className="flex flex-row items-start gap-3">
               <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-emerald-400" />
               <div className="flex-1">
-                <CardTitle className="text-lg">Accepted</CardTitle>
+                <CardTitle className="text-lg">
+                  {bothPaidApp ? "Connected" : "Payment Completed"}
+                </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {acceptedApp.tutor.name ?? acceptedApp.tutor.email}
+                  {(studentPaidApp || bothPaidApp)?.tutor.name ?? (studentPaidApp || bothPaidApp)?.tutor.email}
                 </p>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">{acceptedApp.coverLetter}</p>
+              <p className="text-sm text-muted-foreground mb-4">{(studentPaidApp || bothPaidApp)?.coverLetter}</p>
               
               {/* Contact Info - Only show if unlocked */}
               {request.contact_unlocked ? (
@@ -296,12 +299,12 @@ export default function RequestDetailPage() {
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2 text-sm">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{acceptedApp.tutor.email}</span>
+                      <span>{(studentPaidApp || bothPaidApp)?.tutor.email}</span>
                     </div>
-                    {acceptedApp.tutor.phone && (
+                    {(studentPaidApp || bothPaidApp)?.tutor.phone && (
                       <div className="flex items-center gap-2 text-sm">
                         <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{acceptedApp.tutor.phone}</span>
+                        <span>{(studentPaidApp || bothPaidApp)?.tutor.phone}</span>
                       </div>
                     )}
                   </div>
@@ -387,7 +390,7 @@ export default function RequestDetailPage() {
         </Card>
       )}
 
-      {!isOpen && pendingApps.length === 0 && !acceptedApp && (
+      {!isOpen && pendingApps.length === 0 && !studentPaidApp && !bothPaidApp && (
         <Card className="glass-card p-12 text-center">
           <p className="text-muted-foreground">This request is {request.status.toLowerCase().replace("_", " ")}.</p>
         </Card>

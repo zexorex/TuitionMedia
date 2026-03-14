@@ -125,6 +125,8 @@ export default function TutorApplicationsPage() {
 
   const statusColors: Record<string, string> = {
     PENDING: "bg-amber-500/20 text-amber-400",
+    STUDENT_PAID: "bg-blue-500/20 text-blue-400",
+    BOTH_PAID: "bg-emerald-500/20 text-emerald-400",
     ACCEPTED: "bg-emerald-500/20 text-emerald-400",
     REJECTED: "bg-muted text-muted-foreground",
   };
@@ -205,6 +207,63 @@ export default function TutorApplicationsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{app.coverLetter}</p>
+                  
+                  {app.status === "STUDENT_PAID" && (
+                    <div className="border-t border-white/10 pt-4">
+                      <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2 text-blue-400 mb-1">
+                              <CheckCircle className="h-4 w-4" />
+                              <span className="text-sm font-medium">Student has paid</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Pay ৳500 platform fee to unlock student&apos;s contact details
+                            </p>
+                          </div>
+                          <Button
+                            variant="gradient"
+                            size="sm"
+                            onClick={() => initiateTutorConfirm(app.id)}
+                            disabled={confirmingApp === app.id}
+                            className="gap-1"
+                          >
+                            {confirmingApp === app.id ? (
+                              "Processing..."
+                            ) : (
+                              <>
+                                <CreditCard className="h-3.5 w-3.5" />
+                                Pay ৳500
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {app.status === "BOTH_PAID" && (
+                    <div className="border-t border-white/10 pt-4">
+                      <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20">
+                        <div className="flex items-center gap-2 text-green-400 mb-3">
+                          <CheckCircle className="h-4 w-4" />
+                          <span className="text-sm font-medium">Contact Information Unlocked</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span>{app.request.student.email}</span>
+                          </div>
+                          {app.request.student.phone && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="h-4 w-4 text-muted-foreground" />
+                              <span>{app.request.student.phone}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {app.status === "ACCEPTED" && (
                     <div className="border-t border-white/10 pt-4">
