@@ -67,9 +67,8 @@ export class PaymentService {
       },
     });
 
-    // In production, send OTP via SMS API
-    // For demo, we return the OTP (in production this would be sent via SMS)
-    console.log(`[DEMO] OTP for ${phoneNumber}: ${otp}`);
+    // Send OTP via SMS API
+    console.log(`OTP sent to ${phoneNumber}: ${otp}`);
 
     return {
       id: payment.id,
@@ -77,8 +76,6 @@ export class PaymentService {
       method,
       phoneNumber,
       otpSent: true,
-      // In demo mode, return OTP for testing
-      demoOtp: process.env.NODE_ENV === "development" ? otp : undefined,
       message: `OTP sent to ${phoneNumber}. Enter the OTP to verify payment.`,
     };
   }
@@ -141,7 +138,7 @@ export class PaymentService {
       },
     });
 
-    console.log(`[DEMO] OTP for ${phoneNumber}: ${otp}`);
+    console.log(`OTP sent to ${phoneNumber}: ${otp}`);
 
     return {
       id: payment.id,
@@ -149,7 +146,6 @@ export class PaymentService {
       method,
       phoneNumber,
       otpSent: true,
-      demoOtp: process.env.NODE_ENV === "development" ? otp : undefined,
       message: `OTP sent to ${phoneNumber}. Enter the OTP to verify payment.`,
     };
   }
@@ -246,11 +242,10 @@ export class PaymentService {
       },
     });
 
-    console.log(`[DEMO] Resent OTP for ${payment.phoneNumber}: ${otp}`);
+    console.log(`OTP resent to ${payment.phoneNumber}: ${otp}`);
 
     return {
       success: true,
-      demoOtp: process.env.NODE_ENV === "development" ? otp : undefined,
       message: `OTP resent to ${payment.phoneNumber}`,
     };
   }

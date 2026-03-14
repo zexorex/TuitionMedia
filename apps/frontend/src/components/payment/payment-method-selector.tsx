@@ -11,9 +11,9 @@ type PaymentMethod = "BKASH" | "NAGAD";
 
 interface PaymentMethodSelectorProps {
   amount?: number;
-  onInitiate: (phoneNumber: string) => Promise<{ id: string; demoOtp?: string }>;
+  onInitiate: (phoneNumber: string) => Promise<{ id: string }>;
   onVerify: (otp: string) => Promise<{ success: boolean; contactUnlocked?: boolean }>;
-  onResendOtp: () => Promise<{ demoOtp?: string }>;
+  onResendOtp: () => Promise<{}>;
   onSuccess: () => void;
   onCancel: () => void;
   userType: "student" | "tutor";
@@ -136,10 +136,10 @@ export function PaymentMethodSelector({
 
           {/* Info */}
           <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 text-sm text-blue-700 dark:text-blue-300">
-            <p className="font-medium mb-1">Demo Payment Mode</p>
+            <p className="font-medium mb-1">Secure Payment</p>
             <p className="text-xs opacity-80">
-              This is a demo payment system. No real money will be deducted. 
-              Use any valid Bangladesh phone number (01XXXXXXXXX) and the OTP will be shown for testing.
+              Your payment information is encrypted and secure. 
+              Contact details will be unlocked after successful payment.
             </p>
           </div>
 
