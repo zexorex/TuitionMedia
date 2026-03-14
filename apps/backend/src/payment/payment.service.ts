@@ -32,8 +32,9 @@ export class PaymentService {
       throw new NotFoundException("Application not found");
     }
 
-    if (application.status !== "ACCEPTED") {
-      throw new BadRequestException("Application must be accepted before payment");
+    // For student payment, allow from PENDING status
+    if (application.status !== "PENDING") {
+      throw new BadRequestException("Application is not available for payment");
     }
 
     // Check if payment already exists
