@@ -29,12 +29,10 @@ export function PaymentMethodSelector({
   userType,
 }: PaymentMethodSelectorProps) {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-  const [paymentId, setPaymentId] = useState<string | null>(null);
   const [demoOtp, setDemoOtp] = useState<string | null>(null);
 
   const handleInitiate = async (phoneNumber: string) => {
     const result = await onInitiate(phoneNumber);
-    setPaymentId(result.id);
     if (result.demoOtp) {
       setDemoOtp(result.demoOtp);
     }
